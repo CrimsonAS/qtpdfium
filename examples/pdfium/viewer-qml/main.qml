@@ -2,6 +2,7 @@ import QtQuick 2.3
 import QtQuick.Layouts 1.1
 import QtQuick.Controls 1.2
 import QtQuick.Dialogs 1.2
+import QtPdfium 1.0
 
 ApplicationWindow {
     width: 640
@@ -27,8 +28,7 @@ ApplicationWindow {
         id:fileDialog
         title:"Open PDF file"
         onAccepted: {
-            pdfium.setFilename(fileDialog.fileUrls[0].replace("file://", ""))
-            pageSelector.model = pdfium.pageCount()
+            pdfDocument.source = fileDialog.fileUrls[0].replace("file://", "")
         }
     }
 
@@ -45,16 +45,14 @@ ApplicationWindow {
         anchors.leftMargin: 10
         anchors.verticalCenter: pageSelectorTitle.verticalCenter
         anchors.left: pageSelectorTitle.right
-        enabled: pdfium.ready
-        model: 0
+        enabled: pdfDocument.isValid
+        model: pdfDocument.pageCount
         onModelChanged: update()
 
         onCurrentIndexChanged: update()
 
         function update() {
-            image.source = ""
-            pdf_text.text = pdfium.pageText(currentIndex)
-            image.source = "image://pdf/" + currentIndex
+            pdfDocumentView.pageNumber = currentIndex;
         }
     }
 
@@ -67,17 +65,21 @@ ApplicationWindow {
             bottom: parent.bottom
         }
 
-        Image {
-            id:image
+        PdfDocumentView {
+            id: pdfDocumentView
             width: parent.width/2
             height: parent.height
             smooth: true
+            document: PdfDocument {
+                id: pdfDocument
+            }
         }
 
         TextArea {
             id:pdf_text
             width: parent.width/2
             height: parent.height
+            text: pdfDocumentView.pageText
         }
     }
 }
